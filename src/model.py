@@ -4,7 +4,7 @@ import os
 import time
 import numpy as np
 
-def solve_lp_prime(J, N, S, C, rd, ri, M, a, save=True):
+def solve_lp_prime(J, N, S, C, rd, ri, M, a, rpt, save=True):
     '''
     Solve LP' and return S', x', N
 
@@ -26,6 +26,8 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, save=True):
         Total initial investment for month 1.
     a : (J, 1) np.array of floats
         Cashflows per timestep for each community j.
+    rpt : float
+        Repayment period in same unit as timesteps.
     save : bool
         Indicate to save solution in 'results' directory.
 
@@ -45,7 +47,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, save=True):
     z = model.addVars(J, N, vtype=GRB.BINARY, name='z')
 
     print('Setting objective...')
-    model.setObjective(total_social_utility(S, x, rd, N), GRB.MAXIMIZE)
+    model.setObjective(total_social_utility(S, z, rd, N), GRB.MAXIMIZE)
 
     set_budget(model, x, z, C, M, N, ri, a)
     set_stationarity(model, J, x, z, N)
@@ -65,7 +67,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, save=True):
 
     return S_prime, N_prime, covering
 
-def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, save=True):
+def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, rpt, save=True):
     '''
     Solve LP and return objective and solution
 
@@ -93,6 +95,10 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, save=True
         Indicate if solution covers all communities.
     alpha : float
         Minimum proportion of S_prime to be achieved in LP
+    rpt : float
+        Repayment period in same unit as timesteps.
+    save : bool
+        Indicate to save solution in 'results' directory.
 
     Returns
     -------
@@ -110,13 +116,13 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, save=True
     z = model.addVars(J, N, vtype=GRB.BINARY, name='z')
 
     print("Setting Objective...")
-    model.setObjective(gp.quicksum( a @ x.select('*',n) / (1+rd)**n for n in range(N) ), GRB.MAXIMIZE)
+    model.setObjective(gp.quicksum( a @ x.select('*', n) / (1+rd)**n for n in range(N) ), GRB.MAXIMIZE)
 
     set_budget(model, x, z, C, M, N, ri, a)
     set_stationarity(model, J, x, z, N)
 
-    print("\nSetting social utility constraint...")
-    model.addConstr(total_social_utility(S, x, rd, N) >= alpha*S_prime)
+    print("Setting social utility constraint...")
+    model.addConstr(total_social_utility(S, z, rd, N) >= alpha*S_prime)
 
     if covering:
         print("Setting covering constraint...")
@@ -158,8 +164,8 @@ def set_stationarity(model, J, x, z, N):
         for n in range(1, N):
             model.addConstr(x[j,n] - z[j,n] == x[j,n-1])
 
-def total_social_utility(S, x, r, N):
-    return gp.quicksum( S @ x.select('*',n) / (1+r)**n for n in range(N) )
+def total_social_utility(S, z, r, N):
+    return gp.quicksum( S @ z.select('*', n) / (1+r)**n for n in range(N) )
 
 def solve(m, J, N):
     m.optimize()    
