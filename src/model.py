@@ -50,7 +50,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, rpt, save=True):
     model.setObjective(total_social_utility(S, z, rd, N), GRB.MAXIMIZE)
 
     set_budget(model, x, z, C, M, N, ri, a)
-    set_stationarity(model, J, x, z, N)
+    set_stationarity(model, J, x, z, N, rpt)
     
     ct = time.time()
     print("Elapsed time:", ct - st, "seconds")
@@ -119,7 +119,7 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, rpt, save
     model.setObjective(gp.quicksum( a @ x.select('*', n) / (1+rd)**n for n in range(N) ), GRB.MAXIMIZE)
 
     set_budget(model, x, z, C, M, N, ri, a)
-    set_stationarity(model, J, x, z, N)
+    set_stationarity(model, J, x, z, N, rpt)
 
     print("Setting social utility constraint...")
     model.addConstr(total_social_utility(S, z, rd, N) >= alpha*S_prime)
@@ -157,12 +157,14 @@ def set_budget(model, x, z, C, M, N, r, a):
         model.addConstr(gp.quicksum( C @ z.select('*', t) for t in range(n + 1) ) \
             <= M + r*gp.quicksum( a @ x.select('*', t) for t in range(n) ), f"Budget_{n}")
 
-def set_stationarity(model, J, x, z, N):
+def set_stationarity(model, J, x, z, N, rpt):
     print("\nSet stationarity constraints...")
     for j in range(J):
-        model.addConstr(z[j,0] == x[j,0])
-        for n in range(1, N):
-            model.addConstr(x[j,n] - z[j,n] == x[j,n-1])
+        expr = z.sum(j, "*")
+        model.addConstr(expr <= 1)
+        model.addConstr(x.sum(j, "*") <= rpt*expr)
+        for n in range(N):
+            model.addConstr(x[j, n] <= gp.quicksum(z[j, t] for t in range(n + 1)))
 
 def total_social_utility(S, z, r, N):
     return gp.quicksum( S @ z.select('*', n) / (1+r)**n for n in range(N) )

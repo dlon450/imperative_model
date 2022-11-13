@@ -44,7 +44,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     n = len(alphas)
     npv_all, s_all, x_all = np.zeros(n), np.zeros(n), np.zeros((n, J, N_))
     for i, alpha in enumerate(alphas):
-        npv_all[i], s_all[i], x_all[i] = solve_lp_alpha(J, N=N_, S=social_utilities, C=investment*households_communities, \
+        npv_all[i], s_all[i], x_all[i] = solve_lp_alpha(J, N=int(N_), S=social_utilities, C=investment*households_communities, \
             rd=discount, ri=interest, M=initial, a=cash_flows, S_prime=S_prime, covering=covering, alpha=alpha, rpt=repayment_period_timesteps)
 
     return npv_all, s_all, x_all
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     
     alphas = np.arange(0., 1.1, 1.)
     total_initial_investment = 1e8
-    timeframe = 5 # years
+    timeframe = 10 # years
     timeframe_stepsize_in_months = 12
     investment_per_family = 6500
     discount_rate = 0.06
