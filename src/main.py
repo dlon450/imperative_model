@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from model import solve_lp_prime, solve_lp_alpha, topsis
 from prepare_data import get_social_utilities
 
@@ -34,7 +35,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     cash_flows = np.array([repayment for _ in range(J)])
 
     S_prime, N_, covering = solve_lp_prime(J=J, N=timeframe, S=social_utilities, C=investment*households_communities, \
-        r1=discount, r2=interest, M=initial, a=cash_flows)
+        rd=discount, ri=interest, M=initial, a=cash_flows)
     
     N_ = timeframe ###### for now #######
 
@@ -42,13 +43,13 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     npv_all, s_all, x_all = np.zeros(n), np.zeros(n), np.zeros((n, J, N_))
     for i, alpha in enumerate(alphas):
         npv_all[i], s_all[i], x_all[i] = solve_lp_alpha(J, N=N_, S=social_utilities, C=timeframe*households_communities, \
-            r1=discount, r2=interest, M=initial, a=cash_flows, S_prime=S_prime, covering=covering, alpha=alpha, save=True)
+            rd=discount, ri=interest, M=initial, a=cash_flows, S_prime=S_prime, covering=covering, alpha=alpha, save=True)
 
     return npv_all, s_all, x_all
 
 if __name__ == "__main__":
 
-    fn = "example/2020_communities.csv"
+    fn = os.path.join("example", "2020_communities.csv")
     needs = ["% of Population without Adequate Housing", "% of Population without Electricity", "% of Population without Water and Sanitation Services", "% of Households without access to Internet (Based on people without refrigerator)", "% of People without acces to quality Medical services (Municipality)"]
     
     alphas = np.arange(0., 1.1, 1.)
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     interest_rate = 0.06
     min_repayment_per_timestep = investment_per_family / timeframe / timeframe_stepsize_in_months
 
-    npv, s, x = optimize(fn, needs, alphas, total_initial_investment, timeframe, timeframe_stepsize_in_months, \
-        investment_per_family, discount_rate, interest_rate, min_repayment_per_timestep)
+    npv, s, x = optimize(fn, needs, total_initial_investment, alphas, investment_per_family, timeframe, \
+        discount_rate, interest_rate, min_repayment_per_timestep)
     
     print(npv, s)

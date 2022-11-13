@@ -61,7 +61,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, save=True):
     if save:
         if not os.path.exists('results'):
             os.makedirs('results')
-        np.savetxt(f'results/x_prime_{S_prime:.2f}.csv', x_prime.astype(int), delimiter=',', header=f'x_prime with objective {S_prime}')
+        np.savetxt(os.path.join('results', f'x_prime_{S_prime:.2f}.csv'), x_prime.astype(int), delimiter=',', header=f'x_prime with objective {S_prime}')
 
     return S_prime, N_prime, covering
 
@@ -132,7 +132,7 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, save=True
     if save:
         if not os.path.exists('results'):
             os.makedirs('results')
-        np.savetxt(f'results/x{alpha}_{npv:.2f}.csv', x_best.astype(int), delimiter=',', \
+        np.savetxt(os.path.join('results', f'x{alpha}_{npv:.2f}.csv'), x_best.astype(int), delimiter=',', \
             header=f'x with alpha={alpha} and objective={npv} and s={s_best}')
 
     return npv, s_best, x_best
