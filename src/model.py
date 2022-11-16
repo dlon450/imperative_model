@@ -131,9 +131,9 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, rpt, save
     ct = time.time()
     print("Elapsed time:", ct - st, "seconds")
     print('Solving...')
-    npv, x_best = solve(model, J, N)
+    npv, x_best, z_best = solve(model, J, N)
     print("Elapsed Time:", time.time() - ct, "seconds")
-    s_best = sum([S.dot(x_best[:,i]) / (1+rd)**i for i in range(N)])
+    s_best = sum([S.dot(z_best[:,i]) / (1+rd)**i for i in range(N)])
 
     if save:
         if not os.path.exists('results'):
@@ -174,7 +174,9 @@ def solve(m, J, N):
     print('Obj: %g' % m.objVal)
     x_ = m.getAttr("X", m.getVars()[:J*N])
     x_ = np.array(x_).reshape((J, N))
-    return m.objVal, x_
+    z_ = m.getAttr("X", m.getVars()[J*N:])
+    z_ = np.array(z_).reshape((J, N))
+    return m.objVal, x_, z_
 
 def get_first_covering_timestep(x_):
     try:
