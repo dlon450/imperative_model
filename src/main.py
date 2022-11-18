@@ -4,7 +4,7 @@ import os
 from model import solve_lp_prime, solve_lp_alpha, topsis
 from prepare_data import get_social_utilities
 
-def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discount, interest, repayment_period, stepsize):
+def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discount, interest, repayment_period, stepsize, save=True):
     '''
     Formulate LP' and LP to find optimal strategy for investment allocation.
 
@@ -22,7 +22,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     x : (J, N) binary np.array
         Optimal solution/strategy for investment allocation.
     '''
-    communities_df = pd.read_csv(fn).dropna()#.sample(frac=0.001, random_state=2)
+    communities_df = pd.read_csv(fn).dropna().sample(frac=0.001, random_state=2)
 
     # filter out households that cannot meet monthly requirement
     repayment = investment_per_family / repayment_period
@@ -37,7 +37,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     cash_flows = np.array([repayment for _ in range(J)]) * stepsize
 
     S_prime, N_, covering = solve_lp_prime(J=J, N=timeframe, S=social_utilities, C=investment*households_communities, \
-        rd=discount, ri=interest, M=initial, a=cash_flows, rpt=repayment_period_timesteps)
+        rd=discount, ri=interest, M=initial, a=cash_flows, rpt=repayment_period_timesteps, save=save)
     
     # N_ = timeframe ###### for now #######
 
@@ -45,7 +45,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     npv_all, s_all, x_all = np.zeros(n), np.zeros(n), np.zeros((n, J, N_))
     for i, alpha in enumerate(alphas):
         npv_all[i], s_all[i], x_all[i] = solve_lp_alpha(J, N=int(N_), S=social_utilities, C=investment*households_communities, \
-            rd=discount, ri=interest, M=initial, a=cash_flows, S_prime=S_prime, covering=covering, alpha=alpha, rpt=repayment_period_timesteps)
+            rd=discount, ri=interest, M=initial, a=cash_flows, S_prime=S_prime, covering=covering, alpha=alpha, rpt=repayment_period_timesteps, save=save)
 
     return npv_all, s_all, x_all
 

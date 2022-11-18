@@ -55,7 +55,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, rpt, save=True):
     ct = time.time()
     print("Elapsed time:", ct - st, "seconds")
     print('Solving...')
-    S_prime, x_prime = solve(model, J, N)
+    S_prime, x_prime, _ = solve(model, J, N)
     print("Elapsed Time:", time.time() - ct, "seconds")
 
     covering, N_prime = get_first_covering_timestep(x_prime)
