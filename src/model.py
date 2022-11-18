@@ -155,7 +155,7 @@ def set_budget(model, x, z, C, M, N, r, a):
     for n in range(1, N):
         print(n, end=" ")
         model.addConstr(gp.quicksum( C @ z.select('*', t) for t in range(n + 1) ) \
-            <= M + r*gp.quicksum( a @ x.select('*', t) for t in range(n) ), f"Budget_{n}")
+            <= M + (1+r)*gp.quicksum( a @ x.select('*', t) for t in range(n) ), f"Budget_{n}")
 
 def set_stationarity(model, J, x, z, N, rpt):
     print("\nSet stationarity constraints...")

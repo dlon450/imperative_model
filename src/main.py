@@ -22,7 +22,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     x : (J, N) binary np.array
         Optimal solution/strategy for investment allocation.
     '''
-    communities_df = pd.read_csv(fn).dropna().sample(frac=0.001, random_state=2)
+    communities_df = pd.read_csv(fn).dropna()#.sample(frac=0.001, random_state=2)
 
     # filter out households that cannot meet monthly requirement
     repayment = investment_per_family / repayment_period
