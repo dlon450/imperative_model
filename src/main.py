@@ -22,7 +22,7 @@ def optimize(fn, needs_colnames, initial, alphas, investment, timeframe, discoun
     x : (J, N) binary np.array
         Optimal solution/strategy for investment allocation.
     '''
-    communities_df = pd.read_csv(fn).dropna()#.sample(frac=0.001, random_state=2)
+    communities_df = pd.read_csv(fn).dropna().sample(frac=0.001, random_state=2)
 
     # filter out households that cannot meet monthly requirement
     repayment = investment_per_family / repayment_period
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     needs = ["% of Population without Adequate Housing", "% of Population without Electricity", "% of Population without Water and Sanitation Services", "% of Households without access to Internet (Based on people without refrigerator)", "% of People without acces to quality Medical services (Municipality)"]
     
     alphas = np.arange(0., 1.1, 1.)
-    total_initial_investment = 1e8
+    total_initial_investment = 1e6
     timeframe = 10 # years
     timeframe_stepsize_in_months = 12
     investment_per_family = 6500
