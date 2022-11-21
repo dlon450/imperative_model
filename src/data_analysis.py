@@ -60,9 +60,8 @@ if __name__ == "__main__":
     communities_fn = os.path.join("example", "2020_communities.csv")
     results_fn = "x0.0_183282.06.csv"
 
-    needs = ["% of Population without Adequate Housing", "% of Population without Electricity", "% of Population without Water and Sanitation Services", "% of Households without access to Internet (Based on people without refrigerator)", "% of People without acces to quality Medical services (Municipality)"]
     alphas = np.arange(0., 1.1, 1.)
-    total_initial_investment = 1e6
+    total_initial_investment = 1e8
     timeframe = 10 # years
     timeframe_stepsize_in_months = 12
     investment_per_family = 6500
@@ -72,6 +71,7 @@ if __name__ == "__main__":
 
     ######################## DO NOT CHANGE ##########################
 
+    needs = ["% of Population without Adequate Housing", "% of Population without Electricity", "% of Population without Water and Sanitation Services", "% of Households without access to Internet (Based on people without refrigerator)", "% of People without acces to quality Medical services (Municipality)"]
     communities_df = pd.read_csv(communities_fn).dropna().sample(frac=0.001, random_state=2)
 
     # filter out households that cannot meet monthly requirement
