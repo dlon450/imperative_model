@@ -171,7 +171,7 @@ def total_social_utility(S, z, r, N):
 
 def solve(m, J, N):
 
-    m.Params.MIPGap = 0.005   # 0.5%
+    # m.Params.MIPGap = 0.005   # 0.5%
     m.Params.TimeLimit = 3 * 3600  # 3 hour
 
     m.optimize()    
