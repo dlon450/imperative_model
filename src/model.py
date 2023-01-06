@@ -47,7 +47,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, rpt, save=True):
     z = model.addVars(J, N, vtype=GRB.BINARY, name='z')
 
     print('Setting objective...')
-    model.setObjective(total_social_utility(S, z, rd, N), GRB.MAXIMIZE)
+    model.setObjective(total_social_utility(S, z, rd, N) + x.sum() / J, GRB.MAXIMIZE)
 
     set_budget(model, x, z, C, M, N, ri, a)
     set_stationarity(model, J, x, z, N, rpt)
@@ -65,7 +65,7 @@ def solve_lp_prime(J, N, S, C, rd, ri, M, a, rpt, save=True):
             os.makedirs('results')
         np.savetxt(os.path.join('results', f'x_prime_{S_prime:.2f}.csv'), x_prime.astype(int), delimiter=',', header=f'x_prime with objective {S_prime}')
 
-    return S_prime, N_prime, covering
+    return S_prime - x_prime.sum() / J - 1, N_prime, covering
 
 def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, rpt, save=True):
     '''
@@ -138,7 +138,7 @@ def solve_lp_alpha(J, N, S, C, rd, ri, M, a, S_prime, covering, alpha, rpt, save
     if save:
         if not os.path.exists('results'):
             os.makedirs('results')
-        np.savetxt(os.path.join('results', f'x{alpha}_{npv:.2f}.csv'), x_best.astype(int), delimiter=',', \
+        np.savetxt(os.path.join('results', f'x{alpha:.1f}_{npv:.2f}.csv'), x_best.astype(int), delimiter=',', \
             header=f'x with alpha={alpha} and objective={npv} and s={s_best}')
 
     return npv, s_best, x_best
@@ -155,7 +155,7 @@ def set_budget(model, x, z, C, M, N, r, a):
     for n in range(1, N):
         print(n, end=" ")
         model.addConstr(gp.quicksum( C @ z.select('*', t) for t in range(n + 1) ) \
-            <= M + (1+r)*gp.quicksum( a @ x.select('*', t) for t in range(n) ), f"Budget_{n}")
+            <= M + gp.quicksum( a @ x.select('*', t) for t in range(n) ), f"Budget_{n}")
     
 def set_stationarity(model, J, x, z, N, rpt):
     print("\nSet stationarity constraints...")
@@ -170,6 +170,10 @@ def total_social_utility(S, z, r, N):
     return gp.quicksum( S @ z.select('*', n) / (1+r)**n for n in range(N) )
 
 def solve(m, J, N):
+
+    m.Params.MIPGap = 0.005   # 0.5%
+    m.Params.TimeLimit = 3 * 3600  # 3 hour
+
     m.optimize()    
     print('Obj: %g' % m.objVal)
     x_ = m.getAttr("X", m.getVars()[:J*N])

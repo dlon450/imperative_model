@@ -52,30 +52,34 @@ def plot_results(results_fn, N, people_out_of_poverty, total_initial_investment,
     plt.savefig(os.path.join('results', f'graphs_{results_fn[:results_fn.rfind(".")]}.png'))
     plt.show()
 
+    # plt.plot(np.arange(1, N+1), 100 * np.cumsum(money_received_over_time) * 0.13 / 1e8)
+    # plt.xlabel('Planning year')
+    # plt.ylabel('Return (%)')
+    # plt.show()
 
 if __name__ == "__main__":
 
     ######################### CHANGE HERE ###########################
 
     communities_fn = os.path.join("example", "2020_communities.csv")
-    results_fn = "x0.0_183282.06.csv"
+    results_fn = "x0.8_155436569.58.csv"
 
     alphas = np.arange(0., 1.1, 1.)
     total_initial_investment = 1e8
-    timeframe = 10 # years
+    timeframe = 5 # years
     timeframe_stepsize_in_months = 12
     investment_per_family = 6500
-    discount_rate = 0.06
+    discount_rate = 0.09
     interest_rate = 0.06
     repayment_period_in_months = 60
 
     ######################## DO NOT CHANGE ##########################
 
     needs = ["% of Population without Adequate Housing", "% of Population without Electricity", "% of Population without Water and Sanitation Services", "% of Households without access to Internet (Based on people without refrigerator)", "% of People without acces to quality Medical services (Municipality)"]
-    communities_df = pd.read_csv(communities_fn).dropna().sample(frac=0.001, random_state=2)
+    communities_df = pd.read_csv(communities_fn).dropna()#.sample(frac=0.001, random_state=2)
 
     # filter out households that cannot meet monthly requirement
-    repayment = investment_per_family / repayment_period_in_months
+    repayment = interest_rate * investment_per_family / (1 - (1 + interest_rate) ** - (repayment_period_in_months / 12)) / 12 # monthly household/family repayment
     repayment_period_timesteps = repayment_period_in_months / timeframe_stepsize_in_months
     communities_df = communities_df[communities_df["Average monthly Income per Household (USD/m)"] >= 3 * repayment]
     J = len(communities_df)
@@ -85,7 +89,7 @@ if __name__ == "__main__":
     people_per_community = communities_df['Average Number of Inhabitants per Household'].to_numpy() * households_communities
 
     social_utilities = get_social_utilities(communities_df, proportions_communities, households_communities)
-    cash_flows = np.array([repayment for _ in range(J)]) * timeframe_stepsize_in_months
+    cash_flows = np.array([repayment * h for h in households_communities]) * timeframe_stepsize_in_months
 
     x = pd.read_csv(os.path.join("results", results_fn), skiprows=1, header=None).to_numpy()
     z = get_z(x)
